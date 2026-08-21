@@ -4,14 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel Coringa - Gerador de Keys</title>
-    <!-- Importa o Firebase do Google -->
+    <!-- Importa o Firebase SDK compatível com ambiente Web/HTML -->
     <script src="https://gstatic.com"></script>
     <script src="https://gstatic.com"></script>
     <style>
         body { background-color: #0b0f19; color: #fff; font-family: sans-serif; text-align: center; padding: 50px 20px; }
         .box { background: #111827; border: 2px solid #00f0ff; padding: 30px; border-radius: 10px; max-width: 400px; margin: 0 auto; box-shadow: 0 0 15px rgba(0,240,255,0.2); }
-        h1 { color: #00f0ff; margin-bottom: 20px; font-size: 24px; }
-        select, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: none; font-size: 16px; font-weight: bold; }
+        h1 { color: #00f0ff; margin-bottom: 20px; font-size: 24px; letter-spacing: 2px; }
+        p { color: #9ca3af; font-size: 14px; }
+        select, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: none; font-size: 16px; font-weight: bold; box-sizing: border-box; }
         select { background: #1f2937; color: white; border: 1px solid #374151; }
         button { background: #00f0ff; color: #000; cursor: pointer; transition: 0.2s; }
         button:hover { background: #00b8cc; }
@@ -22,7 +23,7 @@
 
 <div class="box">
     <h1>CORINGA PAINEL</h1>
-    <p>Escolha o tempo de validade da Key:</p>
+    <p>Selecione o tempo de validade da licença:</p>
     
     <select id="tempoValidade">
         <option value="1">1 Dia (Teste)</option>
@@ -36,22 +37,23 @@
 </div>
 
 <script>
-    // ====== PREENCHA AQUI COM OS SEUS DADOS DO FIREBASE ======
+    // Suas credenciais oficiais do Firebase integradas perfeitamente
     const firebaseConfig = {
-        apiKey: "SEU_API_KEY",
-        authDomain: "SEU_AUTH_DOMAIN",
-        projectId: "SEU_PROJECT_ID",
-        storageBucket: "SEU_STORAGE_BUCKET",
-        messagingSenderId: "SEU_MESSAGING_SENDER_ID",
-        appId: "SEU_APP_ID"
+        apiKey: "AIzaSyAnIAXIgDJVP-tM7Uj5s5PmnYA8ah3di7Y",
+        authDomain: "coringa-client.firebaseapp.com",
+        databaseURL: "https://coringa-client-default-rtdb.firebaseio.com",
+        projectId: "coringa-client",
+        storageBucket: "coringa-client.firebasestorage.app",
+        messagingSenderId: "499934593240",
+        appId: "1:499934593240:web:422a461744081f1bc1d7ad",
+        measurementId: "G-J8BSDJ6Q0V"
     };
-    // ========================================================
 
-    // Inicializa o Firebase
+    // Inicializando o Firebase com Realtime Database
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const database = firebase.database();
 
-    // Função que cria o texto da chave aleatória
+    // Função geradora de strings aleatórias e únicas para as chaves
     function criarTextoAleatorio() {
         const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         let resultado = 'CORINGA-';
@@ -62,26 +64,26 @@
         return resultado;
     }
 
-    // Função que salva no Firebase Banco de Dados
+    // Salva a chave gerada diretamente no nó do seu banco de dados
     async function gerarESalvarKey() {
         const dias = parseInt(document.getElementById("tempoValidade").value);
         const novaKey = criarTextoAleatorio();
         const campoResultado = document.getElementById("resultadoKey");
 
         try {
-            // Salva o documento dentro da coleção "keys" usando a chave como ID
-            await db.collection("keys").doc(novaKey).set({
+            // Gravando os dados estruturados no Firebase Realtime Database
+            await database.ref('keys/' + novaKey).set({
                 status: "disponivel",
                 validade_dias: dias,
                 device_id: "",
-                data_ativacao: null
+                data_ativacao: ""
             });
 
-            // Mostra a chave gerada na tela para você copiar
+            // Exibe o texto da chave na tela para você copiar e enviar ao seu cliente
             campoResultado.innerText = novaKey;
             campoResultado.style.display = "block";
         } catch (erro) {
-            alert("Erro ao salvar no Firebase! Verifique suas credenciais e Regras do Firestore.");
+            alert("Erro ao salvar! Verifique as Regras de Segurança (Rules) do seu Realtime Database.");
             console.error(erro);
         }
     }
@@ -89,4 +91,3 @@
 
 </body>
 </html>
-
