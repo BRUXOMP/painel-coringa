@@ -1,0 +1,68 @@
+name: Gerar Nova Key Coringa
+
+on:
+  workflow_dispatch:
+    inputs:
+      validade:
+        description: 'Tempo de validade da key (em dias)'
+        required: true
+        default: '30'
+
+jobs:
+  gerar_e_salvar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Instalar Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Instalar Firebase Admin SDK
+        run: npm install firebase-admin
+
+      - name: Executar Script de Criacao
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_KEY }}
+          DIAS_VALIDADE: ${{ github.event.inputs.validade }}
+        run: |
+          node -e "
+          const admin = require('firebase-admin');
+          const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+          
+          admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+            databaseURL: 'https://firebaseio.com'
+          });
+          
+          const db = admin.database();
+          
+          function criarTextoAleatorio() {
+              const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+              let resultado = 'CORINGA-';
+              for (let i = 0; i < 12; i++) {
+                  if (i === 4 || i === 8) resultado += '-';
+                  resultado += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+              }
+              return resultado;
+          }
+          
+          const novaKey = criarTextoAleatorio();
+          const dias = parseInt(process.env.DIAS_VALIDADE);
+          
+          db.ref('keys/' + novaKey).set({
+              status: 'disponivel',
+              validade_dias: dias,
+              device_id: '',
+              data_ativacao: ''
+          }).then(() => {
+              console.log('=============================================');
+              console.log('CHAVE GERADA COM SUCESSO E SALVA NO FIREBASE:');
+              console.log(novaKey);
+              console.log('=============================================');
+              process.exit(0);
+          }).catch((err) => {
+              console.error('Erro ao salvar no banco:', err);
+              process.exit(1);
+          });
+          "
+
