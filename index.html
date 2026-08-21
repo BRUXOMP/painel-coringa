@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Coringa - Gerador de Keys</title>
+    <!-- Importa o Firebase do Google -->
+    <script src="https://gstatic.com"></script>
+    <script src="https://gstatic.com"></script>
+    <style>
+        body { background-color: #0b0f19; color: #fff; font-family: sans-serif; text-align: center; padding: 50px 20px; }
+        .box { background: #111827; border: 2px solid #00f0ff; padding: 30px; border-radius: 10px; max-width: 400px; margin: 0 auto; box-shadow: 0 0 15px rgba(0,240,255,0.2); }
+        h1 { color: #00f0ff; margin-bottom: 20px; font-size: 24px; }
+        select, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: none; font-size: 16px; font-weight: bold; }
+        select { background: #1f2937; color: white; border: 1px solid #374151; }
+        button { background: #00f0ff; color: #000; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #00b8cc; }
+        .resultado { margin-top: 20px; padding: 15px; background: #1f2937; border-radius: 5px; word-break: break-all; font-family: monospace; font-size: 18px; color: #00ff66; display: none; border: 1px dashed #00ff66; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h1>CORINGA PAINEL</h1>
+    <p>Escolha o tempo de validade da Key:</p>
+    
+    <select id="tempoValidade">
+        <option value="1">1 Dia (Teste)</option>
+        <option value="7">7 Dias (Semanal)</option>
+        <option value="30" selected>30 Dias (Mensal)</option>
+    </select>
+
+    <button onclick="gerarESalvarKey()">GERAR NOVA KEY</button>
+
+    <div id="resultadoKey" class="resultado"></div>
+</div>
+
+<script>
+    // ====== PREENCHA AQUI COM OS SEUS DADOS DO FIREBASE ======
+    const firebaseConfig = {
+        apiKey: "SEU_API_KEY",
+        authDomain: "SEU_AUTH_DOMAIN",
+        projectId: "SEU_PROJECT_ID",
+        storageBucket: "SEU_STORAGE_BUCKET",
+        messagingSenderId: "SEU_MESSAGING_SENDER_ID",
+        appId: "SEU_APP_ID"
+    };
+    // ========================================================
+
+    // Inicializa o Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Função que cria o texto da chave aleatória
+    function criarTextoAleatorio() {
+        const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let resultado = 'CORINGA-';
+        for (let i = 0; i < 12; i++) {
+            if (i === 4 || i === 8) resultado += '-';
+            resultado += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+        }
+        return resultado;
+    }
+
+    // Função que salva no Firebase Banco de Dados
+    async function gerarESalvarKey() {
+        const dias = parseInt(document.getElementById("tempoValidade").value);
+        const novaKey = criarTextoAleatorio();
+        const campoResultado = document.getElementById("resultadoKey");
+
+        try {
+            // Salva o documento dentro da coleção "keys" usando a chave como ID
+            await db.collection("keys").doc(novaKey).set({
+                status: "disponivel",
+                validade_dias: dias,
+                device_id: "",
+                data_ativacao: null
+            });
+
+            // Mostra a chave gerada na tela para você copiar
+            campoResultado.innerText = novaKey;
+            campoResultado.style.display = "block";
+        } catch (erro) {
+            alert("Erro ao salvar no Firebase! Verifique suas credenciais e Regras do Firestore.");
+            console.error(erro);
+        }
+    }
+</script>
+
+</body>
+</html>
+
